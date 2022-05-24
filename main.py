@@ -27,7 +27,6 @@ def pooling_devman_api(func, devman_token, tg_chat_id, timestamp=None):
     while True:
         check_detail = func(devman_token, timestamp)
         if check_detail:
-            print(check_detail)
             if check_detail['status'] == 'found':
                 timestamp = check_detail.get('last_attempt_timestamp')
                 lesson_title = check_detail['new_attempts'][0]['lesson_title']
