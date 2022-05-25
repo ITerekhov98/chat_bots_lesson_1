@@ -1,9 +1,9 @@
 import requests
-
+import telegram
 from environs import Env
 from requests.exceptions import ReadTimeout, ConnectionError
 
-from tg_bot import bot
+
 from bot_answer_templates import title, fail_status, success_status
 
 
@@ -23,7 +23,7 @@ def fetch_list_checks(devman_token, timestamp):
     return response.json()
 
 
-def pooling_devman_api(func, devman_token, tg_chat_id, timestamp=None):
+def pooling_devman_api(func, devman_token, tg_chat_id, bot, timestamp=None):
     while True:
         check_detail = func(devman_token, timestamp)
         if check_detail:
@@ -48,12 +48,14 @@ def pooling_devman_api(func, devman_token, tg_chat_id, timestamp=None):
 def main():
     env = Env()
     env.read_env()
+    bot = telegram.Bot(token=env.str('TG_TOKEN'))
     devman_token = env.str('DEVMAN_API_TOKEN')
     tg_chat_id = env.str('TG_CHAT_ID')
     pooling_devman_api(
         func=fetch_list_checks,
         devman_token=devman_token,
-        tg_chat_id=tg_chat_id
+        tg_chat_id=tg_chat_id,
+        bot=bot,
     )
 
 
