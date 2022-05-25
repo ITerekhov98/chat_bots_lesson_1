@@ -1,4 +1,5 @@
-from time import time
+import time 
+
 import requests
 import telegram
 from environs import Env
@@ -14,20 +15,26 @@ def fetch_checks(devman_token, timestamp):
         'Authorization': f'Token {devman_token}',
     }
     params = {'timestamp': timestamp}
-    try:
-        response = requests.get(url, headers=headers, params=params)
-    except (ReadTimeout, ConnectionError):
-        return
+    response = requests.get(url, headers=headers, params=params)
     response.raise_for_status()
     return response.json()
 
 
 def pooling_devman_api(devman_token, tg_chat_id, bot, timestamp=None):
+    failed_connections = 0
     while True:
-        check_detail = fetch_checks(devman_token, timestamp)
+        try:
+            check_detail = fetch_checks(devman_token, timestamp)
+        except (ReadTimeout, ConnectionError):
+            failed_connections += 1
+            if failed_connections > 10:
+                time.sleep(180)
+            continue
+
         if  not check_detail:
             continue
 
+        failed_connections = 0
         if not check_detail['status'] == 'found':
             timestamp = check_detail.get('timestamp_to_request')
             continue
