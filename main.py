@@ -15,17 +15,19 @@ def fetch_checks(devman_token, timestamp):
         'Authorization': f'Token {devman_token}',
     }
     params = {'timestamp': timestamp}
-    response = requests.get(url, headers=headers, params=params)
+    response = requests.get(url, headers=headers, params=params, timeout=2)
     response.raise_for_status()
     return response.json()
 
 
-def pooling_devman_api(devman_token, tg_chat_id, bot, timestamp=None):
+def pooling_devman_api(devman_token, tg_chat_id, bot, timestamp=5):
     failed_connections = 0
     while True:
         try:
             check_detail = fetch_checks(devman_token, timestamp)
-        except (ReadTimeout, ConnectionError):
+        except ReadTimeout:
+            continue
+        except ConnectionError:
             failed_connections += 1
             if failed_connections > 10:
                 time.sleep(180)
@@ -52,7 +54,6 @@ def pooling_devman_api(devman_token, tg_chat_id, bot, timestamp=None):
         bot.send_message(
             text=message,
             chat_id=tg_chat_id)
-
 
 
 def main():
