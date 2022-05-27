@@ -1,11 +1,10 @@
-import time 
+import time
 import logging
 
 import requests
 import telegram
 from environs import Env
 from requests.exceptions import ReadTimeout, ConnectionError
-
 
 from bot_answer_templates import title, fail_status, success_status
 
@@ -16,7 +15,6 @@ class TelegramLogsHandler(logging.Handler):
         super().__init__()
         self.chat_id = chat_id
         self.tg_bot = tg_bot
-        
 
     def emit(self, record):
         log_entry = self.format(record)
@@ -47,7 +45,7 @@ def pooling_devman_api(devman_token, tg_chat_id, bot, timestamp=None):
                 time.sleep(180)
             continue
 
-        if  not check_detail:
+        if not check_detail:
             continue
 
         failed_connections = 0
@@ -90,7 +88,6 @@ def main():
         except Exception as err:
             logger.exception(err)
             time.sleep(120)
-
 
 
 if __name__ == '__main__':
