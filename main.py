@@ -35,7 +35,6 @@ def fetch_checks(devman_token, timestamp):
 
 
 def pooling_devman_api(devman_token, tg_chat_id, bot, timestamp=None):
-    1/0
     failed_connections = 0
     while True:
         try:
@@ -81,14 +80,16 @@ def main():
     logger = logging.getLogger('tg_bot')
     logger.setLevel(logging.WARNING)
     logger.addHandler(TelegramLogsHandler(bot, tg_chat_id))
-    try:
-        pooling_devman_api(
-            devman_token=devman_token,
-            tg_chat_id=tg_chat_id,
-            bot=bot,
-        )
-    except Exception as err:
-        logger.error(err)
+    while True:
+        try:
+            pooling_devman_api(
+                devman_token=devman_token,
+                tg_chat_id=tg_chat_id,
+                bot=bot,
+            )
+        except Exception as err:
+            logger.exception(err)
+            time.sleep(120)
 
 
 
