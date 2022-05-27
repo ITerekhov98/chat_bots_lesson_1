@@ -1,4 +1,5 @@
 import time 
+import logging
 
 import requests
 import telegram
@@ -9,18 +10,32 @@ from requests.exceptions import ReadTimeout, ConnectionError
 from bot_answer_templates import title, fail_status, success_status
 
 
+class TelegramLogsHandler(logging.Handler):
+
+    def __init__(self, tg_bot, chat_id):
+        super().__init__()
+        self.chat_id = chat_id
+        self.tg_bot = tg_bot
+        
+
+    def emit(self, record):
+        log_entry = self.format(record)
+        self.tg_bot.send_message(chat_id=self.chat_id, text=log_entry)
+
+
 def fetch_checks(devman_token, timestamp):
     url = 'https://dvmn.org/api/long_polling/'
     headers = {
         'Authorization': f'Token {devman_token}',
     }
     params = {'timestamp': timestamp}
-    response = requests.get(url, headers=headers, params=params, timeout=2)
+    response = requests.get(url, headers=headers, params=params)
     response.raise_for_status()
     return response.json()
 
 
-def pooling_devman_api(devman_token, tg_chat_id, bot, timestamp=5):
+def pooling_devman_api(devman_token, tg_chat_id, bot, timestamp=None):
+    1/0
     failed_connections = 0
     while True:
         try:
@@ -62,11 +77,19 @@ def main():
     bot = telegram.Bot(token=env.str('TG_TOKEN'))
     devman_token = env.str('DEVMAN_API_TOKEN')
     tg_chat_id = env.str('TG_CHAT_ID')
-    pooling_devman_api(
-        devman_token=devman_token,
-        tg_chat_id=tg_chat_id,
-        bot=bot,
-    )
+
+    logger = logging.getLogger('tg_bot')
+    logger.setLevel(logging.WARNING)
+    logger.addHandler(TelegramLogsHandler(bot, tg_chat_id))
+    try:
+        pooling_devman_api(
+            devman_token=devman_token,
+            tg_chat_id=tg_chat_id,
+            bot=bot,
+        )
+    except Exception as err:
+        logger.error(err)
+
 
 
 if __name__ == '__main__':
